@@ -1,33 +1,64 @@
 'use strict';
 
-import {partialRight, invoke} from 'lodash';
+import React from 'react';
 
-Promise.all([
-  fetch('https://api.github.com/repos/leonidas/gulp-project-template'),
-  fetch('https://api.github.com/repos/leonidas/gulp-project-template/commits')
-])
-.then(partialRight(invoke, 'json'))
-.then(Promise.all.bind(Promise))
-.then(data => {
+import {
+  refresh,
+  loading,
+  repository
+} from './actions';
 
-  const [repository, commits] = data;
-  const {html_url, description, full_name} = repository;
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      repository: null
+    };
+  }
+  componentDidMount() {
+    repository.onValue((value) =>
+      this.setState({repository: value}));
+    loading.onValue((value) =>
+      this.setState({loading: value}));
+  }
+  refresh() {
+    refresh.push();
+  }
+  render() {
+    const {repository, loading} = this.state;
 
-  const commitItems = commits.map(item => {
-    const {commit} = item;
+    if(!repository) {
+      return <span>Loading...</span>;
+    }
 
-    return `
-      <li>
-        <span>${commit.message.replace(/\n/g, '<br />')}<span>
-        <br /><br />
-        <small>${commit.committer.name}</small>
-      </li>`;
-  });
+    const commitItems = repository.commits.map((item, i) => {
+      const {commit} = item;
+      return (
+        <li key={i}>
+          <span>
+            {commit.message.replace(/\n/g, '<br />')}
+          </span>
+          <br /><br />
+          <small>{commit.committer.name}</small>
+        </li>
+      );
+    });
 
-  document.body.innerHTML = `
-    <h1>${description}</h1>
-    <h2><a href="${html_url}">${full_name}</a></h2>
-    <ul>${commitItems.join('')}</ul>
-  `;
-});
+    return (
+      <div>
+        <h1>{repository.description}</h1>
+        <div className="header">
+          <h2>
+            <a href={repository.html_url}>
+              {repository.full_name}
+            </a>
+          </h2>
+          <button onClick={this.refresh}>Refresh {loading ? 'Loading' : ''}</button>
+        </div>
+        <ul>{commitItems}</ul>
+      </div>
+    );
+  }
+}
 
+React.render(<App />, document.body);

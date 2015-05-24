@@ -16,7 +16,9 @@
     "template"
   ],
   "dependencies": {
-    "lodash": "^3.9.1"
+    "baconjs": "^0.7.59",
+    "lodash": "^3.9.1",
+    "react": "^0.13.3"
   },
   "devDependencies": {
     "babelify": "^6.1.1",
@@ -44,7 +46,14 @@
   },
   "browserify": {
     "transform": [
-      "babelify",
+      [
+        "babelify",
+        {
+          "optional": [
+            "es7.classProperties"
+          ]
+        }
+      ],
       "debowerify",
       "deamdify"
     ]
